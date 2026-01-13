@@ -21,7 +21,7 @@ X (Twitter) üzerinde belirlediğiniz hesapların tweetlerini otomatik olarak be
 **Yöntem 1: Popup'tan**
 
 1. Tarayıcıdaki eklenti ikonuna tıklayın
-2. Kullanıcı adını yazın (örn: `elonmusk`)
+2. Kullanıcı adını yazın (örn: `username`)
 3. **Ekle** butonuna tıklayın
 
 **Yöntem 2: Tweet üzerinden**
