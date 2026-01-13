@@ -6,11 +6,12 @@ X (Twitter) üzerinde belirlediğiniz hesapların tweetlerini otomatik olarak be
 
 ## Kurulum
 
-1. Bu repoyu indirin veya klonlayın
-2. Chrome'da `chrome://extensions` adresine gidin
-3. Sağ üstten **Geliştirici modu**'nu açın
-4. **Paketlenmemiş öğe yükle**'ye tıklayın
-5. İndirdiğiniz `x-like-extension` klasörünü seçin
+1. [**Eklentiyi indir**](https://github.com/ahmetozmtn/x-like-extionsion/releases/download/v0.1/x-like-extension-v0.1.zip)
+2. ZIP dosyasını bir klasöre çıkart
+3. Chrome'da `chrome://extensions` adresine git
+4. Sağ üstten **Geliştirici modu**'nu aç
+5. **Paketlenmemiş öğe yükle**'ye tıkla
+6. Çıkarttığın `x-like-extension` klasörünü seç
 
 ---
 
