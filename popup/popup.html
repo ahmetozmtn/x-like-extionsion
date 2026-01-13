@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X Auto Like & Retweet</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>X Auto Engagement</h1>
+      <div class="status-indicator" id="statusIndicator">
+        <span class="status-dot"></span>
+        <span class="status-text">Pasif</span>
+      </div>
+    </header>
+
+    <section class="section">
+      <h2>Hesap Ekle</h2>
+      <form id="addAccountForm" class="add-account-form">
+        <div class="input-group">
+          <span class="input-prefix">@</span>
+          <input 
+            type="text" 
+            id="usernameInput" 
+            placeholder="kullaniciadi"
+            autocomplete="off"
+            spellcheck="false"
+          >
+        </div>
+        <button type="submit" class="btn btn-primary">Ekle</button>
+      </form>
+    </section>
+
+    <section class="section">
+      <h2>Takip Edilen Hesaplar</h2>
+      <div class="accounts-list" id="accountsList">
+        <p class="empty-message">Henüz hesap eklenmedi</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Ayarlar</h2>
+      <div class="settings">
+        <label class="toggle-setting">
+          <span class="setting-label">
+            <span class="setting-icon">❤️</span>
+            Otomatik Beğen
+          </span>
+          <input type="checkbox" id="likeEnabled" checked>
+          <span class="toggle-slider"></span>
+        </label>
+        
+        <label class="toggle-setting">
+          <span class="setting-label">
+            <span class="setting-icon">🔁</span>
+            Otomatik Retweet
+          </span>
+          <input type="checkbox" id="retweetEnabled">
+          <span class="toggle-slider"></span>
+        </label>
+
+        <label class="toggle-setting">
+          <span class="setting-label">
+            <span class="setting-icon">⚡</span>
+            Otomatik Mod
+          </span>
+          <input type="checkbox" id="autoMode" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="section actions">
+      <button class="btn btn-scan" id="scanButton">
+        <span class="btn-icon">🔍</span>
+        Şimdi Tara
+      </button>
+    </section>
+
+    <footer class="footer">
+      <p id="statsText">0 tweet işlendi</p>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

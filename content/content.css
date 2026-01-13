@@ -1,0 +1,66 @@
+/* X Auto Like & Retweet - Content Script Styles */
+
+/* Add Button - Appears next to username */
+.x-auto-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 4px;
+  padding: 0;
+  border: 1px solid rgba(29, 155, 240, 0.5);
+  border-radius: 50%;
+  background: transparent;
+  color: #1d9bf0;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  vertical-align: middle;
+  line-height: 1;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  flex-shrink: 0;
+}
+
+.x-auto-add-btn:hover {
+  background: rgba(29, 155, 240, 0.15);
+  border-color: #1d9bf0;
+  transform: scale(1.1);
+}
+
+.x-auto-add-btn.added {
+  background: rgba(0, 186, 124, 0.15);
+  border-color: rgba(0, 186, 124, 0.5);
+  color: #00ba7c;
+}
+
+.x-auto-add-btn.added:hover {
+  background: rgba(244, 33, 46, 0.15);
+  border-color: rgba(244, 33, 46, 0.5);
+  color: #f4212e;
+}
+
+/* Toast Notification */
+.x-auto-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #1d9bf0;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.x-auto-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
