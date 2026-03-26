@@ -13,6 +13,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     // Set default values
     await chrome.storage.sync.set({
       accounts: [],
+      words: [],
       settings: DEFAULT_SETTINGS,
       processedCount: 0
     });
@@ -40,10 +41,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Handle get data request
 async function handleGetData(sendResponse) {
   try {
-    const result = await chrome.storage.sync.get(['accounts', 'settings']);
+    const result = await chrome.storage.sync.get(['accounts', 'words', 'settings']);
     sendResponse({
       success: true,
       accounts: result.accounts || [],
+      words: result.words || [],
       settings: result.settings || DEFAULT_SETTINGS
     });
   } catch (error) {
@@ -59,6 +61,8 @@ async function handleGetData(sendResponse) {
 async function handleUpdateProcessedCount(count) {
   try {
     await chrome.storage.sync.set({ processedCount: count });
+    // If popup is currently open, update its stats text
+    chrome.runtime.sendMessage({ type: 'STATS_UPDATE', count }).catch(() => {});
   } catch (error) {
     console.error('Error updating processed count:', error);
   }
@@ -89,6 +93,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       
       if (changes.accounts) {
         updateMessage.changes.accounts = changes.accounts.newValue;
+      }
+      if (changes.words) {
+        updateMessage.changes.words = changes.words.newValue;
       }
       if (changes.settings) {
         updateMessage.changes.settings = changes.settings.newValue;

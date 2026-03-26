@@ -5,6 +5,7 @@
 
   // State
   let accounts = [];
+  let words = [];
   let settings = {
     likeEnabled: true,
     retweetEnabled: false,
@@ -49,8 +50,10 @@
       const response = await chrome.runtime.sendMessage({ type: 'GET_DATA' });
       if (response && response.success) {
         accounts = response.accounts || [];
+        words = (response.words || []).map(w => String(w).trim().toLowerCase()).filter(Boolean);
         settings = response.settings || settings;
         console.log('[X Auto Engagement] Loaded accounts:', accounts);
+        console.log('[X Auto Engagement] Loaded words:', words);
         console.log('[X Auto Engagement] Settings:', settings);
       }
     } catch (error) {
@@ -69,8 +72,9 @@
           
         case 'SETTINGS_UPDATED':
           accounts = message.accounts || [];
+          words = (message.words || words).map(w => String(w).trim().toLowerCase()).filter(Boolean);
           settings = message.settings || settings;
-          console.log('[X Auto Engagement] Settings updated:', { accounts, settings });
+          console.log('[X Auto Engagement] Settings updated:', { accounts, words, settings });
           
           // Toggle observer based on auto mode
           if (settings.autoMode) {
@@ -85,6 +89,9 @@
           if (message.changes.accounts !== undefined) {
             accounts = message.changes.accounts;
             updateAllAddButtons();
+          }
+          if (message.changes.words !== undefined) {
+            words = (message.changes.words || []).map(w => String(w).trim().toLowerCase()).filter(Boolean);
           }
           if (message.changes.settings !== undefined) {
             settings = message.changes.settings;
@@ -276,10 +283,22 @@
     }, 1000);
   }
 
-  // Scan timeline for tweets from target accounts
+  // Check whether tweet contains at least one configured keyword
+  function tweetContainsConfiguredWords(tweet) {
+    if (words.length === 0) return false;
+    const text = (tweet.innerText || tweet.textContent || '').toLowerCase();
+    for (const w of words) {
+      if (!w) continue;
+      if (text.includes(w)) return true;
+    }
+    return false;
+  }
+
+  // Scan timeline for tweets from target accounts (and/or matching keywords)
   async function scanTimeline() {
-    if (isProcessing || accounts.length === 0) return;
+    if (isProcessing) return;
     if (!settings.likeEnabled && !settings.retweetEnabled) return;
+    if (accounts.length === 0 && words.length === 0) return;
     
     isProcessing = true;
     console.log('[X Auto Engagement] Scanning timeline...');
@@ -293,15 +312,27 @@
         const tweetId = getTweetId(tweet);
         if (!tweetId || processedTweets.has(tweetId)) continue;
         
-        // Get username from tweet
-        const username = getTweetUsername(tweet);
-        if (!username) continue;
+        let hasAccountMatch = false;
+        if (accounts.length > 0) {
+          const username = getTweetUsername(tweet);
+          if (username) {
+            hasAccountMatch = accounts.includes(username.toLowerCase());
+          }
+        }
+
+        const hasWordMatch = tweetContainsConfiguredWords(tweet);
         
-        // Check if this is from a target account
-        const normalizedUsername = username.toLowerCase();
-        if (!accounts.includes(normalizedUsername)) continue;
+        // Neither account nor keywords matched
+        if (!hasAccountMatch && !hasWordMatch) continue;
         
-        console.log(`[X Auto Engagement] Found tweet from @${username}`);
+        if (hasAccountMatch && hasWordMatch) {
+          console.log('[X Auto Engagement] Found tweet matching account and word');
+        } else if (hasAccountMatch) {
+          const username = getTweetUsername(tweet);
+          console.log(`[X Auto Engagement] Found tweet from @${username || '?'}`);
+        } else {
+          console.log('[X Auto Engagement] Found tweet matching keyword');
+        }
         
         // Process the tweet
         await processTweet(tweet, tweetId);

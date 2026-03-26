@@ -2,6 +2,11 @@
 const addAccountForm = document.getElementById('addAccountForm');
 const usernameInput = document.getElementById('usernameInput');
 const accountsList = document.getElementById('accountsList');
+
+const addWordForm = document.getElementById('addWordForm');
+const wordInput = document.getElementById('wordInput');
+const wordsList = document.getElementById('wordsList');
+
 const likeEnabled = document.getElementById('likeEnabled');
 const retweetEnabled = document.getElementById('retweetEnabled');
 const autoMode = document.getElementById('autoMode');
@@ -11,6 +16,7 @@ const statsText = document.getElementById('statsText');
 
 // State
 let accounts = [];
+let words = [];
 let settings = {
   likeEnabled: true,
   retweetEnabled: false,
@@ -24,6 +30,7 @@ document.addEventListener('DOMContentLoaded', init);
 async function init() {
   await loadData();
   renderAccounts();
+  renderWords();
   updateStatus();
   setupEventListeners();
 }
@@ -31,8 +38,9 @@ async function init() {
 // Load data from storage
 async function loadData() {
   try {
-    const result = await chrome.storage.sync.get(['accounts', 'settings', 'processedCount']);
+    const result = await chrome.storage.sync.get(['accounts', 'words', 'settings', 'processedCount']);
     accounts = result.accounts || [];
+    words = (result.words || []).map(w => String(w).trim().toLowerCase()).filter(Boolean);
     settings = result.settings || settings;
     processedCount = result.processedCount || 0;
     
@@ -49,9 +57,9 @@ async function loadData() {
 // Save data to storage
 async function saveData() {
   try {
-    await chrome.storage.sync.set({ accounts, settings });
+    await chrome.storage.sync.set({ accounts, words, settings });
     // Notify content script about settings change
-    notifyContentScript({ type: 'SETTINGS_UPDATED', accounts, settings });
+    notifyContentScript({ type: 'SETTINGS_UPDATED', accounts, words, settings });
   } catch (error) {
     console.error('Error saving data:', error);
   }
@@ -60,6 +68,7 @@ async function saveData() {
 // Setup event listeners
 function setupEventListeners() {
   addAccountForm.addEventListener('submit', handleAddAccount);
+  addWordForm.addEventListener('submit', handleAddWord);
   likeEnabled.addEventListener('change', handleSettingChange);
   retweetEnabled.addEventListener('change', handleSettingChange);
   autoMode.addEventListener('change', handleSettingChange);
@@ -78,6 +87,11 @@ function setupEventListeners() {
     if (namespace === 'sync' && changes.accounts) {
       accounts = changes.accounts.newValue || [];
       renderAccounts();
+      updateStatus();
+    }
+    if (namespace === 'sync' && changes.words) {
+      words = (changes.words.newValue || []).map(w => String(w).trim().toLowerCase()).filter(Boolean);
+      renderWords();
       updateStatus();
     }
   });
@@ -120,11 +134,52 @@ function handleAddAccount(e) {
   usernameInput.focus();
 }
 
+// Handle add word
+function handleAddWord(e) {
+  e.preventDefault();
+
+  let word = wordInput.value.trim().toLowerCase();
+  if (!word) return;
+
+  // If user types '@kelime', store without '@' so UI and matching are clean
+  if (word.startsWith('@')) {
+    word = word.substring(1);
+  }
+
+  // Prevent duplicates
+  if (words.includes(word)) {
+    alert('Bu kelime zaten ekli');
+    return;
+  }
+
+  // Optional basic sanity: limit length to keep UI/processing stable
+  if (word.length > 60) {
+    alert('Kelime çok uzun (max 60 karakter)');
+    return;
+  }
+
+  words.push(word);
+  saveData();
+  renderWords();
+  updateStatus();
+
+  wordInput.value = '';
+  wordInput.focus();
+}
+
 // Handle remove account
 function handleRemoveAccount(username) {
   accounts = accounts.filter(acc => acc !== username);
   saveData();
   renderAccounts();
+  updateStatus();
+}
+
+// Handle remove word
+function handleRemoveWord(word) {
+  words = words.filter(w => w !== word);
+  saveData();
+  renderWords();
   updateStatus();
 }
 
@@ -187,9 +242,31 @@ function renderAccounts() {
   });
 }
 
+// Render words list
+function renderWords() {
+  if (words.length === 0) {
+    wordsList.innerHTML = '<p class="empty-message">Henüz kelime eklenmedi</p>';
+    return;
+  }
+
+  wordsList.innerHTML = words.map(word => `
+    <div class="account-item">
+      <span class="word-name">${escapeHtml(word)}</span>
+      <button class="btn-remove" data-word="${escapeHtml(word)}">Kaldır</button>
+    </div>
+  `).join('');
+
+  wordsList.querySelectorAll('.btn-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      handleRemoveWord(btn.dataset.word);
+    });
+  });
+}
+
 // Update status indicator
 function updateStatus() {
-  const isActive = accounts.length > 0 && (settings.likeEnabled || settings.retweetEnabled);
+  const hasTargets = accounts.length > 0 || words.length > 0;
+  const isActive = hasTargets && (settings.likeEnabled || settings.retweetEnabled);
   
   if (isActive) {
     statusIndicator.classList.add('active');
