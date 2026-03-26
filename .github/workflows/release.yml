@@ -2,8 +2,8 @@ name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - "main"
   workflow_dispatch:
 
 permissions:
@@ -15,11 +15,44 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Prepare zip
+      - name: Detect manifest version bump
+        id: version
+        shell: bash
         run: |
           set -euo pipefail
-          TAG_NAME="${GITHUB_REF_NAME}"
+
+          VERSION_CURRENT=$(node -p "require('./manifest.json').version")
+          TAG_NAME="v${VERSION_CURRENT}"
+
+          # If this is the first commit (no HEAD^), just run once.
+          if git rev-parse HEAD^ >/dev/null 2>&1; then
+            MANIFEST_CHANGED=0
+            if ! git diff --quiet HEAD^ HEAD -- manifest.json; then
+              MANIFEST_CHANGED=1
+            fi
+
+            VERSION_PREV=$(git show HEAD^:manifest.json | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version")
+          else
+            MANIFEST_CHANGED=1
+            VERSION_PREV=""
+          fi
+
+          SHOULD_RELEASE=0
+          if [ "${MANIFEST_CHANGED}" -eq 1 ] && [ "${VERSION_PREV}" != "${VERSION_CURRENT}" ]; then
+            SHOULD_RELEASE=1
+          fi
+
+          echo "VERSION_CURRENT=${VERSION_CURRENT}" >> "$GITHUB_ENV"
+          echo "TAG_NAME=${TAG_NAME}" >> "$GITHUB_ENV"
+          echo "should_release=${SHOULD_RELEASE}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare zip
+        if: steps.version.outputs.should_release == '1'
+        run: |
+          set -euo pipefail
           ZIP_NAME="x-like-extension-${TAG_NAME}.zip"
           rm -f "${ZIP_NAME}"
           zip -r "${ZIP_NAME}" . \
@@ -28,8 +61,23 @@ jobs:
             -x "**/.DS_Store"
           echo "ZIP_NAME=${ZIP_NAME}" >> "$GITHUB_ENV"
 
+      - name: Ensure tag exists
+        if: steps.version.outputs.should_release == '1'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ -z "$(git ls-remote --tags origin "refs/tags/${TAG_NAME}")" ]; then
+            git tag "${TAG_NAME}"
+            git push origin "${TAG_NAME}"
+          fi
+
       - name: Create GitHub Release
+        if: steps.version.outputs.should_release == '1'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: ${{ env.TAG_NAME }}
           files: ${{ env.ZIP_NAME }}
           generate_release_notes: true

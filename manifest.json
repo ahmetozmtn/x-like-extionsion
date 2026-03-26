@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "X Auto Like & Retweet",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "X (Twitter) ana sayfasında belirlediğiniz hesapların tweetlerini otomatik beğenin ve retweet edin.",
   "permissions": [
     "storage",
