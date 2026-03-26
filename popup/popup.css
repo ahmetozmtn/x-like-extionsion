@@ -96,9 +96,7 @@ body {
   border-color: var(--accent-blue);
 }
 
-.input-prefix {
-  color: var(--text-secondary);
-}
+
 
 .input-group input {
   flex: 1;
