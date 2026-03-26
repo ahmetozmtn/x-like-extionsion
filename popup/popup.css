@@ -77,6 +77,13 @@ body {
   margin-bottom: 12px;
 }
 
+.list-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 14px 0 10px;
+}
+
 .add-account-form {
   display: flex;
   gap: 10px;
